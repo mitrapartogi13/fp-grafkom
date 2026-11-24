@@ -110,9 +110,27 @@ const stats = new Stats();
 stats.dom.id = "stats";
 stats.dom.style.display = "none";
 $("app").append(stats.dom);
+// Koordinat kamera (meter) dan arah pandang; tampil bersama panel FPS.
+const coords = document.createElement("div");
+coords.id = "coords";
+coords.style.display = "none";
+$("app").append(coords);
 const toggleStats = () => {
-  stats.dom.style.display = stats.dom.style.display === "none" ? "block" : "none";
+  const show = stats.dom.style.display === "none";
+  stats.dom.style.display = show ? "block" : "none";
+  coords.style.display = show ? "block" : "none";
 };
+const dirVec = new THREE.Vector3();
+const COMPASS = ["U", "TL", "T", "TG", "S", "BD", "B", "BL"]; // utara = -z (belakang rumah)
+function updateCoords() {
+  if (coords.style.display === "none") return;
+  const p = camera.position;
+  camera.getWorldDirection(dirVec);
+  const yaw = (THREE.MathUtils.radToDeg(Math.atan2(dirVec.x, -dirVec.z)) + 360) % 360;
+  coords.textContent =
+    `X ${p.x.toFixed(2)}  Y ${p.y.toFixed(2)}  Z ${p.z.toFixed(2)}\n` +
+    `Arah ${yaw.toFixed(0)}° ${COMPASS[Math.round(yaw / 45) % 8]}`;
+}
 
 // Diambil tepat setelah render di frame yang sama, karena isi drawing buffer
 // WebGL tidak dijamin tersedia lagi setelah frame selesai.
@@ -165,6 +183,7 @@ renderer.setAnimationLoop((now) => {
     saveScreenshot();
   }
   stats.update();
+  updateCoords();
 });
 
 // ?view=pendopo (atau nama preset lain) untuk langsung membuka sudut tertentu
