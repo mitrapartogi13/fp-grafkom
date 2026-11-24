@@ -8,19 +8,74 @@
   </head>
   <body>
     <div id="app">
-      <div id="hud">
+      <header class="app-bar">
         <strong>Replika Rumah Joglo</strong>
-        <div class="row" id="presets"></div>
-        <div class="row">
-          <button id="mode" type="button">Mode: Orbit</button>
-          <button id="tour" type="button">Tur otomatis</button>
-          <button id="door" type="button">Tutup pintu</button>
-          <button id="night" type="button">Malam</button>
+        <label for="view-select">Tampilan</label>
+        <select id="view-select">
+          <option value="">Rumah Lengkap</option>
+          <optgroup id="component-options" label="Komponen"></optgroup>
+        </select>
+      </header>
+
+      <main id="house-view" aria-label="Rumah Lengkap">
+        <div id="house-viewport" class="viewport"></div>
+        <div id="hud">
+          <div class="row" id="presets"></div>
+          <div class="row">
+            <button id="mode" type="button">Mode: Orbit</button>
+            <button id="tour" type="button">Tur otomatis</button>
+            <button id="door" type="button">Tutup pintu</button>
+            <button id="night" type="button">Malam</button>
+          </div>
+          <p id="help"></p>
         </div>
-        <p id="help"></p>
-      </div>
-      <div id="crosshair"></div>
-      <div id="lock-hint">Klik layar untuk mulai berjalan</div>
+        <div id="crosshair"></div>
+        <div id="lock-hint">Klik layar untuk mulai berjalan</div>
+      </main>
+
+      <section id="component-view" aria-labelledby="component-title" hidden>
+        <div class="component-stage">
+          <div id="component-viewport" class="viewport"></div>
+          <p class="orbit-hint">Seret untuk mengorbit. Gulir atau cubit untuk zoom.</p>
+        </div>
+        <aside class="component-panel">
+          <h1 id="component-title"></h1>
+
+          <label class="instance-field" for="component-instance">
+            Instance
+            <select id="component-instance"></select>
+          </label>
+          <div class="component-actions">
+            <button id="duplicate-component" type="button">Duplikat</button>
+            <button id="frame-components" type="button">Fokuskan kamera</button>
+          </div>
+          <label class="visibility-field">
+            <input id="component-visible" type="checkbox" checked />
+            Tampilkan instance
+          </label>
+
+          <fieldset>
+            <legend>Posisi</legend>
+            <div class="axis-fields">
+              <label>X <input type="number" step="any" data-transform="position" data-axis="x" /></label>
+              <label>Y <input type="number" step="any" data-transform="position" data-axis="y" /></label>
+              <label>Z <input type="number" step="any" data-transform="position" data-axis="z" /></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Rotasi (°)</legend>
+            <div class="axis-fields">
+              <label>X <input type="number" step="any" data-transform="rotation" data-axis="x" /></label>
+              <label>Y <input type="number" step="any" data-transform="rotation" data-axis="y" /></label>
+              <label>Z <input type="number" step="any" data-transform="rotation" data-axis="z" /></label>
+            </div>
+          </fieldset>
+          <label class="scale-field">
+            Skala
+            <input type="number" min="0.01" step="any" data-transform="scale" data-axis="x" />
+          </label>
+        </aside>
+      </section>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

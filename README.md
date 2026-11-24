@@ -36,15 +36,29 @@ Untuk masuk ke rumah pada mode orbit, scroll terus ke arah rumah. Saat kamera
 sudah dekat target, scroll berubah menjadi maju/mundur sehingga kamera bisa
 masuk ke pendopo atau dalem.
 
+## Pratinjau komponen
+
+Pilih komponen dari menu **Tampilan** untuk membukanya di ruang pratinjau.
+Seret pada pratinjau untuk mengorbit, lalu gulir atau cubit untuk zoom. **Duplikat**
+menambahkan salinan di samping instance yang sudah ada. Pilih instance untuk
+mengatur posisi, rotasi, skala, atau visibilitasnya. Gunakan **Fokuskan kamera**
+untuk membingkai semua instance yang terlihat.
+
+Perubahan pada tiap komponen tersimpan selama tab masih terbuka. Pilih
+**Rumah Lengkap** untuk kembali ke rumah dan halamannya.
+
 ## Struktur kode
 
 | File | Isi |
 |---|---|
 | `src/textures.js` | tekstur prosedural kayu dan genteng (CanvasTexture), pemetaan UV kayu |
 | `src/lib.js` | material, fungsi bantu `box`, `cyl`, `beam`, `ring` |
-| `src/joglo.js` | bebatur, umpak, soko guru, soko pengarak, tumpang sari, atap, dinding, pintu, perabot, lampu |
+| `src/joglo.js` | perakitan rumah dan fungsi pembuat bebatur, tiang, atap, dinding, pintu, dan lampu |
+| `src/furniture.js` | fungsi pembuat perabot dengan titik asal di lantai |
 | `src/environment.js` | halaman, jalan batu, pagar, gapura, pohon, semak, bunga, kolam, sumur, batu, rumput |
 | `src/camera.js` | OrbitControls, PointerLockControls + tabrakan, preset, tur otomatis |
+| `src/component-catalog.js` | daftar komponen dan fungsi pembuat untuk pratinjau |
+| `src/component-preview.js` | adegan terpisah, kamera, dan kontrol instance |
 | `src/main.js` | renderer, cahaya, bayangan, siang/malam, HUD, loop animasi |
 
 ## Konsep grafika yang dipakai

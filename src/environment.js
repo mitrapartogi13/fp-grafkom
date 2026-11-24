@@ -1,11 +1,10 @@
-// Lingkungan di dalam pagar: tanah, halaman, jalan setapak, pagar + gapura,
-// pohon, semak, bunga, kolam, sumur, batu, dan rumput.
 import * as THREE from "three";
-import { MAT, box, cyl, ball } from "./lib.js";
+import { MAT, box, cyl, ball, place } from "./lib.js";
 
 const FENCE_X = 22;
 const FENCE_BACK = -22;
 const FENCE_FRONT = 36;
+const GATE_HALF_WIDTH = 3.2;
 const POND = { x: -13, z: 29, r: 3.2 };
 const WELL = { x: 17, z: -8 };
 
@@ -16,6 +15,48 @@ function flat(parent, w, d, mat, x, y, z) {
   m.receiveShadow = true;
   parent.add(m);
   return m;
+}
+
+export function createFenceSegment(length = FENCE_X - GATE_HALF_WIDTH) {
+  const group = new THREE.Group();
+  box(group, length, 1.1, 0.45, MAT.stone, 0, 0.55, 0, { solid: true });
+  box(group, length, 0.12, 0.6, MAT.stoneDark, 0, 1.16, 0);
+  const intervals = Math.max(1, Math.round(length / 6));
+  for (let i = 0; i <= intervals; i++) {
+    box(group, 0.7, 1.45, 0.7, MAT.brick, length * (i / intervals - 0.5), 0.725, 0);
+  }
+  return group;
+}
+
+export function createGate() {
+  const group = new THREE.Group();
+  const tiers = [
+    [1.4, 1.4, 1.1], [1.25, 0.4, 1.0], [1.05, 0.6, 0.85],
+    [0.85, 0.4, 0.7], [0.6, 0.5, 0.5], [0.3, 0.4, 0.3],
+  ];
+  for (const s of [-1, 1]) {
+    let y = 0;
+    tiers.forEach(([w, h, d], i) => {
+      box(group, w, h, d, i % 2 ? MAT.stoneDark : MAT.brick, s * 2.5, y + h / 2, 0, { solid: i === 0 });
+      y += h;
+    });
+  }
+  return group;
+}
+
+export function createWell() {
+  const group = new THREE.Group();
+  cyl(group, 0.95, 1.0, 0.85, MAT.stone, 0, 0.425, 0, 16, { solid: true });
+  cyl(group, 0.78, 0.78, 0.02, MAT.black, 0, 0.86, 0, 16, { cast: false });
+  for (const s of [-1, 1]) box(group, 0.12, 2.2, 0.12, MAT.woodDark, s * 0.85, 1.1, 0);
+  box(group, 1.9, 0.1, 0.1, MAT.wood, 0, 1.9, 0);
+  for (const s of [-1, 1]) {
+    const roof = box(group, 2.2, 0.05, 0.95, MAT.roofDark, 0, 2.33, s * 0.35);
+    roof.rotation.x = s * 0.55;
+  }
+  cyl(group, 0.01, 0.01, 0.5, MAT.black, 0, 1.6, 0, 4, { cast: false });
+  cyl(group, 0.14, 0.11, 0.22, MAT.woodLight, 0, 1.25, 0, 10);
+  return group;
 }
 
 export function buildEnvironment(rand) {
@@ -36,45 +77,26 @@ export function buildEnvironment(rand) {
     Math.hypot(x - WELL.x, z - WELL.z) < 1.6 + pad ||
     nearFence(x, z);
 
-  // ---- tanah dan halaman ----
   flat(g, 600, 600, MAT.grass, 0, 0, 0);
   flat(g, 27, 37, MAT.yard, 0, 0.015, 3);
 
-  // ---- jalan setapak dari batu pipih ----
   for (let z = 15.7; z < 35.8; z += 0.72) {
     const s = cyl(g, 0.42, 0.46, 0.08, MAT.stone, r(-0.12, 0.12), 0.04, z, 7, { cast: false });
     s.rotation.y = rand() * 3;
   }
 
-  // ---- pagar batu + pilar + gapura candi bentar ----
-  const fence = (x0, z0, x1, z1) => {
-    const alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+  const placeFence = (x0, z0, x1, z1) => {
     const len = Math.hypot(x1 - x0, z1 - z0);
-    const cx = (x0 + x1) / 2;
-    const cz = (z0 + z1) / 2;
-    box(g, alongX ? len : 0.45, 1.1, alongX ? 0.45 : len, MAT.stone, cx, 0.55, cz, { solid: true });
-    box(g, alongX ? len : 0.6, 0.12, alongX ? 0.6 : len, MAT.stoneDark, cx, 1.16, cz);
-    const n = Math.round(len / 6);
-    for (let i = 0; i <= n; i++) {
-      const k = i / n;
-      box(g, 0.7, 1.45, 0.7, MAT.brick, x0 + (x1 - x0) * k, 0.725, z0 + (z1 - z0) * k);
-    }
+    const yaw = -Math.atan2(z1 - z0, x1 - x0);
+    place(g, createFenceSegment(len), (x0 + x1) / 2, 0, (z0 + z1) / 2, yaw);
   };
-  fence(-FENCE_X, FENCE_BACK, FENCE_X, FENCE_BACK);
-  fence(-FENCE_X, FENCE_BACK, -FENCE_X, FENCE_FRONT);
-  fence(FENCE_X, FENCE_BACK, FENCE_X, FENCE_FRONT);
-  fence(-FENCE_X, FENCE_FRONT, -3.2, FENCE_FRONT);
-  fence(3.2, FENCE_FRONT, FENCE_X, FENCE_FRONT);
-  const tiers = [[1.4, 1.4, 1.1], [1.25, 0.4, 1.0], [1.05, 0.6, 0.85], [0.85, 0.4, 0.7], [0.6, 0.5, 0.5], [0.3, 0.4, 0.3]];
-  for (const s of [-1, 1]) {
-    let y = 0;
-    tiers.forEach(([w, h, d], i) => {
-      box(g, w, h, d, i % 2 ? MAT.stoneDark : MAT.brick, s * 2.5, y + h / 2, FENCE_FRONT, { solid: i === 0 });
-      y += h;
-    });
-  }
+  placeFence(-FENCE_X, FENCE_BACK, FENCE_X, FENCE_BACK);
+  placeFence(-FENCE_X, FENCE_BACK, -FENCE_X, FENCE_FRONT);
+  placeFence(FENCE_X, FENCE_BACK, FENCE_X, FENCE_FRONT);
+  placeFence(-FENCE_X, FENCE_FRONT, -GATE_HALF_WIDTH, FENCE_FRONT);
+  placeFence(GATE_HALF_WIDTH, FENCE_FRONT, FENCE_X, FENCE_FRONT);
+  place(g, createGate(), 0, 0, FENCE_FRONT);
 
-  // ---- pohon (hierarki objek: batang -> daun) ----
   const treeRound = (x, z, s = 1) => {
     const t = new THREE.Group();
     t.position.set(x, 0, z);
@@ -131,7 +153,6 @@ export function buildEnvironment(rand) {
   };
   const plant = { round: treeRound, pine: treePine, coco: treeCoconut };
 
-  // pohon di dalam pagar (ditata manual)
   [
     [-18, -18, "round", 1.2], [-9, -19, "pine", 1], [0, -19.5, "round", 1.1], [9, -19, "pine", 1.1],
     [18, -17.5, "round", 1.2], [-18.5, -4, "coco", 1], [-18, 6, "round", 1], [18.5, 4, "coco", 1.05],
@@ -139,7 +160,6 @@ export function buildEnvironment(rand) {
     [17, 22, "round", 1], [19, 32, "pine", 0.9], [-19, 33, "pine", 1], [-19.5, 23, "round", 0.8],
   ].forEach(([x, z, type, s]) => plant[type](x, z, s));
 
-  // semak di sekeliling bebatur dan pagar
   const nearSideSteps = (x, z) => x > 0 && Math.abs(z - 0.2) < 1.8;
   for (let z = -10; z <= 14; z += 2.4) {
     for (const s of [-1, 1]) if (!nearSideSteps(s, z)) bush(s * r(8.6, 9.4), z + r(-0.4, 0.4), r(0.8, 1.2));
@@ -153,7 +173,6 @@ export function buildEnvironment(rand) {
     n++;
   }
 
-  // ---- bunga (InstancedMesh: tangkai + kepala) ----
   const flowers = [];
   for (let z = 22; z < 34.5; z += 0.45) for (const s of [-1, 1]) flowers.push([s * r(2.3, 3.4), z + r(-0.15, 0.15)]);
   for (let i = 0; i < 40; i++) {
@@ -180,7 +199,6 @@ export function buildEnvironment(rand) {
   });
   g.add(stems, heads);
 
-  // ---- kolam ----
   const water = new THREE.Mesh(new THREE.CircleGeometry(POND.r, 28), MAT.water);
   water.rotation.x = -Math.PI / 2;
   water.position.set(POND.x, 0.03, POND.z);
@@ -195,24 +213,8 @@ export function buildEnvironment(rand) {
     if (i % 2 === 0) ball(g, 0.12, MAT.lotus, x + 0.1, 0.14, z);
   }
 
-  // ---- sumur ----
-  {
-    const w = new THREE.Group();
-    w.position.set(WELL.x, 0, WELL.z);
-    g.add(w);
-    cyl(w, 0.95, 1.0, 0.85, MAT.stone, 0, 0.425, 0, 16, { solid: true });
-    cyl(w, 0.78, 0.78, 0.02, MAT.black, 0, 0.86, 0, 16, { cast: false });
-    for (const s of [-1, 1]) box(w, 0.12, 2.2, 0.12, MAT.woodDark, s * 0.85, 1.1, 0);
-    box(w, 1.9, 0.1, 0.1, MAT.wood, 0, 1.9, 0);
-    for (const s of [-1, 1]) {
-      const roof = box(w, 2.2, 0.05, 0.95, MAT.roofDark, 0, 2.33, s * 0.35);
-      roof.rotation.x = s * 0.55;
-    }
-    cyl(w, 0.01, 0.01, 0.5, MAT.black, 0, 1.6, 0, 4, { cast: false });
-    cyl(w, 0.14, 0.11, 0.22, MAT.woodLight, 0, 1.25, 0, 10);
-  }
+  place(g, createWell(), WELL.x, 0, WELL.z);
 
-  // ---- batu (InstancedMesh dari dodecahedron yang diskalakan acak) ----
   const rocks = [];
   const addRock = (x, z, s, flatness = 0.6) => rocks.push({ x, z, s, flatness });
   for (let z = 21; z < 35.5; z += 0.9) for (const s of [-1, 1]) addRock(s * r(1.4, 1.7), z + r(-0.2, 0.2), r(0.15, 0.28));
@@ -245,7 +247,6 @@ export function buildEnvironment(rand) {
   rockMesh.receiveShadow = true;
   g.add(rockMesh);
 
-  // ---- rumput (InstancedMesh: ribuan kerucut tipis, berkelompok) ----
   const GRASS_COLORS = [0x4f8a2f, 0x5f9e3a, 0x77b048, 0x3f7a28];
   const blade = new THREE.ConeGeometry(0.05, 0.45, 3).translate(0, 0.225, 0);
   const N = 14000;

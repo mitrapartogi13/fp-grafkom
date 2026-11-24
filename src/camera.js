@@ -1,10 +1,3 @@
-// Kontrol kamera:
-//  - Orbit : memutar kamera mengelilingi target (OrbitControls). Bila kamera
-//            dekat target (< 1.6 m), drag = menoleh dan scroll = maju/mundur,
-//            sehingga kamera bisa "terbang" masuk ke dalam rumah.
-//  - Jalan : first-person (PointerLockControls) dengan WASD dan tabrakan
-//            sederhana terhadap dinding, tiang, pagar, dan naik anak tangga.
-//  - Preset ruangan dengan animasi transisi, dan tur otomatis (spline).
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
@@ -73,7 +66,9 @@ export class CameraRig {
       if (this.mode === "walk" && !this.walk.isLocked) this.walk.lock();
     });
     dom.addEventListener("wheel", (e) => this.onWheel(e), { passive: false });
-    addEventListener("keydown", (e) => (this.keys[e.code] = true));
+    addEventListener("keydown", (e) => {
+      if (!e.target.closest?.("input, select, textarea, [contenteditable]")) this.keys[e.code] = true;
+    });
     addEventListener("keyup", (e) => (this.keys[e.code] = false));
     addEventListener("blur", () => (this.keys = {}));
 
@@ -87,7 +82,6 @@ export class CameraRig {
     return this.walk.isLocked;
   }
 
-  // ---------- tabrakan (AABB dari mesh yang ditandai "solid") ----------
   blocked(x, z, feet) {
     for (const b of this.colliders) {
       if (b.max.y <= feet + STEP || b.min.y >= feet + EYE + 0.15) continue;
@@ -111,7 +105,6 @@ export class CameraRig {
     this.camera.lookAt(look);
   }
 
-  // ---------- preset dan mode ----------
   goTo(key, instant = false) {
     const p = PRESETS.find((q) => q.key === key);
     if (!p) return;
@@ -206,7 +199,6 @@ export class CameraRig {
     return mv;
   }
 
-  // ---------- update per frame ----------
   update(dt) {
     if (this.tour) return this.updateTour(dt);
     if (this.mode === "walk") return this.updateWalk(dt);

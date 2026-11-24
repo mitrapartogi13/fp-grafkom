@@ -13,9 +13,204 @@ body {
 }
 
 #app {
-  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   width: 100%;
   height: 100%;
+  color: #f4ead8;
+}
+
+.app-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #211912;
+  border-bottom: 1px solid #533d2c;
+  padding: 9px 16px;
+  font-size: 14px;
+}
+
+.app-bar strong {
+  margin-right: auto;
+}
+
+.app-bar label {
+  color: #d8c6ae;
+}
+
+.app-bar select,
+.component-panel select,
+.component-panel input[type="number"],
+.component-panel button {
+  min-height: 34px;
+  padding: 6px 9px;
+  color: #f4ead8;
+  background: #30251c;
+  border: 1px solid #735840;
+  border-radius: 5px;
+  font: inherit;
+  color-scheme: dark;
+}
+
+.app-bar select {
+  max-width: 100%;
+}
+
+#house-view,
+.component-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+#component-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(270px, 27vw, 340px);
+}
+
+#component-view[hidden] {
+  display: none;
+}
+
+.component-stage {
+  background: #242522;
+}
+
+.orbit-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  margin: 0;
+  color: #efdfca;
+  font-size: 13px;
+  text-align: center;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+}
+
+.component-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  background: #241c16;
+  border-left: 1px solid #533d2c;
+  font-size: 14px;
+}
+
+.component-panel h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.instance-field {
+  display: grid;
+  gap: 6px;
+}
+
+.component-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.component-panel button {
+  cursor: pointer;
+}
+
+.component-panel button:hover {
+  background: #453326;
+}
+
+.component-panel #duplicate-component {
+  color: #24170d;
+  background: #d8a069;
+  border-color: #d8a069;
+  font-weight: bold;
+}
+
+.component-panel #duplicate-component:hover {
+  background: #edb883;
+}
+
+.visibility-field,
+.scale-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.visibility-field input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #d8a069;
+}
+
+.component-panel fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px 10px;
+  border: 1px solid #533d2c;
+  border-radius: 5px;
+}
+
+.component-panel legend {
+  padding: 0 4px;
+  color: #e9d2b9;
+}
+
+.axis-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.axis-fields label {
+  display: grid;
+  gap: 4px;
+  color: #d8c6ae;
+}
+
+.axis-fields input {
+  min-width: 0;
+  width: 100%;
+}
+
+.scale-field input {
+  width: 84px;
+}
+
+@media (max-width: 700px) {
+  .app-bar {
+    flex-wrap: wrap;
+    padding-inline: 12px;
+  }
+
+  .app-bar strong {
+    flex: 1 0 100%;
+  }
+
+  #component-view {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .component-panel {
+    border-top: 1px solid #533d2c;
+    border-left: 0;
+    padding: 14px;
+  }
 }
 
 canvas {
