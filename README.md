@@ -24,11 +24,11 @@ sudut tertentu, dan `&night` untuk mode malam.
 | Aksi | Mode Orbit | Mode Jalan |
 |---|---|---|
 | Melihat | drag kiri (putar; bila dekat = menoleh) | gerakkan mouse |
-| Bergerak | WASD / drag kanan (geser) | WASD, Shift = lari |
+| Bergerak | WASD / drag kanan (geser) | WASD, Shift = lari, Spasi = lompat, Ctrl = jongkok |
 | Maju/mundur | scroll (zoom; bila dekat = maju/mundur) | - |
 
 Tombol keyboard: `1`-`7` preset kamera, `F` ganti mode, `T` tur otomatis,
-`P` buka/tutup pintu, `N` siang/malam, `H` sembunyikan HUD,
+`P` buka/tutup semua pintu, `E` buka/tutup pintu yang dibidik crosshair, `N` siang/malam, `H` sembunyikan HUD,
 `G` tampilkan FPS, `C` simpan screenshot (PNG). Pada mode jalan, klik layar untuk
 mengunci mouse dan tekan Esc untuk melepasnya.
 
@@ -36,15 +36,32 @@ Untuk masuk ke rumah pada mode orbit, scroll terus ke arah rumah. Saat kamera
 sudah dekat target, scroll berubah menjadi maju/mundur sehingga kamera bisa
 masuk ke pendopo atau dalem.
 
+## Pratinjau komponen
+
+Pilih komponen dari grup **Bangunan**, **Perabot**, atau **Halaman** di menu
+**Tampilan** untuk membukanya di ruang pratinjau. Grup **Halaman** mencakup
+rumput, air, kolam teratai, tiga jenis pohon, batu alam, dan jalan setapak.
+Seret pada pratinjau untuk mengorbit, lalu gulir atau cubit untuk zoom. **Duplikat**
+menambahkan salinan di samping instance yang sudah ada. Pilih instance untuk
+mengatur posisi, rotasi, skala, atau visibilitasnya. Gunakan **Fokuskan kamera**
+untuk membingkai semua instance yang terlihat.
+
+Perubahan pada tiap komponen tersimpan selama tab masih terbuka. Pilih
+**Rumah Lengkap** untuk kembali ke rumah dan halamannya.
+
 ## Struktur kode
 
 | File | Isi |
 |---|---|
 | `src/textures.js` | tekstur prosedural kayu dan genteng (CanvasTexture), pemetaan UV kayu |
 | `src/lib.js` | material, fungsi bantu `box`, `cyl`, `beam`, `ring` |
-| `src/joglo.js` | bebatur, umpak, soko guru, soko pengarak, tumpang sari, atap, dinding, pintu, perabot, lampu |
-| `src/environment.js` | halaman, jalan batu, pagar, gapura, pohon, semak, bunga, kolam, sumur, batu, rumput |
+| `src/joglo.js` | perakitan rumah dan fungsi pembuat bebatur, tiang, atap, dinding, pintu, dan lampu |
+| `src/furniture.js` | fungsi pembuat perabot dengan titik asal di lantai |
+| `src/environment.js` | perakitan halaman, pagar, gapura, dan sumur |
+| `src/landscape.js` | fungsi pembuat tanah, jalur, pohon, semak, bunga, kolam, batu, dan rumput |
 | `src/camera.js` | OrbitControls, PointerLockControls + tabrakan, preset, tur otomatis |
+| `src/component-catalog.js` | daftar komponen dan fungsi pembuat untuk pratinjau |
+| `src/component-preview.js` | adegan terpisah, kamera, dan kontrol instance |
 | `src/main.js` | renderer, cahaya, bayangan, siang/malam, HUD, loop animasi |
 
 ## Konsep grafika yang dipakai

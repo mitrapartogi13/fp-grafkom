@@ -1,4 +1,3 @@
-// Material dan fungsi bantu untuk membuat geometri dasar.
 import * as THREE from "three";
 import { woodTexture, roofTexture, applyWoodUV, rng } from "./textures.js";
 
@@ -17,7 +16,6 @@ const wood = (color) => {
 };
 
 export const MAT = {
-  // kayu dan bangunan
   wood: wood(0x9a6538),
   woodDark: wood(0x6a4425),
   woodLight: wood(0xb98049),
@@ -26,9 +24,8 @@ export const MAT = {
   plinth: lambert(0x8f8c82),
   floor: lambert(0xb4694a),
   wall: lambert(0xece1c6),
-  roof: lambert(0xffffff, { map: roofTexture(), side: THREE.DoubleSide }), // genteng
+  roof: lambert(0xffffff, { map: roofTexture(), side: THREE.DoubleSide }),
   roofDark: lambert(0x6e2c1f),
-  // perabot
   cloth: lambert(0xb3302a),
   white: lambert(0xf1ece0),
   mat: lambert(0xd6bf7a),
@@ -36,7 +33,6 @@ export const MAT = {
   black: lambert(0x2a2622),
   skin: lambert(0xc99a66),
   bulb: new THREE.MeshBasicMaterial({ color: 0xffe7a3 }),
-  // lingkungan
   grass: lambert(0x6aa443),
   yard: lambert(0xcdb88d),
   banana: lambert(0x9bb35a),
@@ -59,10 +55,16 @@ function finish(mesh, parent, x, y, z, opt) {
   mesh.position.set(x, y, z);
   mesh.castShadow = opt.cast ?? true;
   mesh.receiveShadow = true;
-  // "solid" = dipakai untuk tabrakan saat mode jalan
   if (opt.solid) mesh.userData.solid = true;
   parent.add(mesh);
   return mesh;
+}
+
+export function place(parent, object, x = 0, y = 0, z = 0, rotY = 0) {
+  object.position.set(x, y, z);
+  object.rotation.y = rotY;
+  parent.add(object);
+  return object;
 }
 
 export function box(parent, w, h, d, mat, x = 0, y = 0, z = 0, opt = {}) {
@@ -81,7 +83,6 @@ export function ball(parent, r, mat, x = 0, y = 0, z = 0, opt = {}) {
   return finish(new THREE.Mesh(geo, mat), parent, x, y, z, opt);
 }
 
-// Balok dari titik a ke titik b (koordinat lokal parent).
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 export function beam(parent, a, b, t, mat, opt = {}) {
   const dir = new THREE.Vector3().subVectors(b, a);
@@ -90,7 +91,6 @@ export function beam(parent, a, b, t, mat, opt = {}) {
   return m;
 }
 
-// Bingkai persegi dari 4 balok, berpusat di (0, y, 0).
 export function ring(parent, hx, hz, t, h, y, mat, opt = {}) {
   box(parent, 2 * hx + t, h, t, mat, 0, y, hz, opt);
   box(parent, 2 * hx + t, h, t, mat, 0, y, -hz, opt);

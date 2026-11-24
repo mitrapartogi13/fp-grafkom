@@ -1,9 +1,5 @@
-// Tekstur prosedural (digambar di <canvas>), jadi tidak perlu file gambar luar.
-//  - kayu   : serat kayu abu-abu terang, dikalikan dengan warna material kayu.
-//  - genteng: susunan genteng terakota per baris.
 import * as THREE from "three";
 
-// Bilangan acak dengan seed agar hasilnya selalu sama.
 export function rng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -59,7 +55,6 @@ export function woodTexture() {
       g.stroke();
     }
   }
-  // mata kayu
   for (let i = 0; i < 3; i++) {
     const x = 30 + rand() * (W - 60);
     const y = 40 + rand() * (H - 80);
@@ -71,7 +66,6 @@ export function woodTexture() {
       g.stroke();
     }
   }
-  // bintik halus
   for (let i = 0; i < 2500; i++) {
     const v = rand() < 0.5 ? 255 : 90;
     g.fillStyle = `rgba(${v},${v},${v},0.06)`;
@@ -97,12 +91,10 @@ export function roofTexture() {
       const k = 0.85 + rand() * 0.25;
       g.fillStyle = `rgb(${Math.round(168 * k)},${Math.round(74 * k)},${Math.round(50 * k)})`;
       g.fillRect(x + 1, y, t - 2, t - 3);
-      // lengkung genteng: sisi terang dan sisi gelap
       g.fillStyle = "rgba(255,215,180,0.16)";
       g.fillRect(x + t * 0.22, y, t * 0.26, t - 3);
       g.fillStyle = "rgba(60,20,10,0.22)";
       g.fillRect(x + t * 0.68, y, t * 0.22, t - 3);
-      // bayangan tumpukan di tepi bawah genteng
       g.fillStyle = "rgba(35,10,5,0.6)";
       g.fillRect(x, y + t - 9, t, 9);
       g.fillStyle = "rgba(255,210,170,0.18)";
