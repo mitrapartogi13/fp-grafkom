@@ -343,3 +343,18 @@ canvas {
   right: 12px;
   bottom: 12px;
 }
+
+#coords {
+  position: absolute;
+  z-index: 10;
+  right: 12px;
+  bottom: 68px;
+  padding: 6px 10px;
+  color: #f4ead8;
+  background: rgba(40, 26, 16, 0.78);
+  border: 1px solid rgba(214, 170, 110, 0.5);
+  border-radius: 6px;
+  font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  white-space: pre;
+  pointer-events: none;
+}
