@@ -95,3 +95,14 @@ canvas {
   display: none;
   pointer-events: none;
 }
+
+#hud.hidden {
+  display: none;
+}
+
+#stats {
+  top: auto !important;
+  left: auto !important;
+  right: 12px;
+  bottom: 12px;
+}

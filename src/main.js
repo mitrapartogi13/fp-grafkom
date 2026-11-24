@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import Stats from "three/addons/libs/stats.module.js";
 import "./style.css";
 import { rng } from "./lib.js";
 import { buildJoglo } from "./joglo.js";
@@ -102,6 +103,30 @@ const toggleNight = () => {
   applyTime();
 };
 
+// ---------- HUD, FPS, screenshot ----------
+const toggleHud = () => $("hud").classList.toggle("hidden");
+
+const stats = new Stats();
+stats.dom.id = "stats";
+stats.dom.style.display = "none";
+$("app").append(stats.dom);
+const toggleStats = () => {
+  stats.dom.style.display = stats.dom.style.display === "none" ? "block" : "none";
+};
+
+// Diambil tepat setelah render di frame yang sama, karena isi drawing buffer
+// WebGL tidak dijamin tersedia lagi setelah frame selesai.
+let screenshotRequested = false;
+function saveScreenshot() {
+  renderer.domElement.toBlob((blob) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `joglo-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
+
 $("mode").onclick = toggleMode;
 $("tour").onclick = toggleTour;
 $("door").onclick = toggleDoor;
@@ -109,13 +134,16 @@ $("night").onclick = toggleNight;
 for (const b of document.querySelectorAll("#hud button")) b.addEventListener("click", () => b.blur());
 
 addEventListener("keydown", (e) => {
-  if (e.repeat) return;
+  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const n = Number(e.key);
   if (n >= 1 && n <= PRESETS.length) rig.goTo(PRESETS[n - 1].key);
   else if (e.code === "KeyF") toggleMode();
   else if (e.code === "KeyT") toggleTour();
   else if (e.code === "KeyP") toggleDoor();
   else if (e.code === "KeyN") toggleNight();
+  else if (e.code === "KeyH") toggleHud();
+  else if (e.code === "KeyG") toggleStats();
+  else if (e.code === "KeyC") screenshotRequested = true;
 });
 
 addEventListener("resize", () => {
@@ -132,6 +160,11 @@ renderer.setAnimationLoop((now) => {
   rig.update(dt);
   house.update(dt);
   renderer.render(scene, camera);
+  if (screenshotRequested) {
+    screenshotRequested = false;
+    saveScreenshot();
+  }
+  stats.update();
 });
 
 // ?view=pendopo (atau nama preset lain) untuk langsung membuka sudut tertentu

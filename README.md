@@ -11,7 +11,11 @@ npm install
 npm run dev
 ```
 
-Buka `http://localhost:8000`. Tambahkan `?view=pendopo` (atau `eksterior`,
+Buka `http://localhost:8000`. Versi online:
+https://mitrapartogi13.github.io/fp-grafkom/
+
+Untuk deploy ulang ke GitHub Pages: `npm run deploy`.
+ Tambahkan `?view=pendopo` (atau `eksterior`,
 `gerbang`, `pringgitan`, `dalem`, `senthong`, `atas`) untuk langsung membuka
 sudut tertentu, dan `&night` untuk mode malam.
 
@@ -24,7 +28,8 @@ sudut tertentu, dan `&night` untuk mode malam.
 | Maju/mundur | scroll (zoom; bila dekat = maju/mundur) | - |
 
 Tombol keyboard: `1`-`7` preset kamera, `F` ganti mode, `T` tur otomatis,
-`P` buka/tutup pintu, `N` siang/malam. Pada mode jalan, klik layar untuk
+`P` buka/tutup pintu, `N` siang/malam, `H` sembunyikan HUD,
+`G` tampilkan FPS, `C` simpan screenshot (PNG). Pada mode jalan, klik layar untuk
 mengunci mouse dan tekan Esc untuk melepasnya.
 
 Untuk masuk ke rumah pada mode orbit, scroll terus ke arah rumah. Saat kamera
