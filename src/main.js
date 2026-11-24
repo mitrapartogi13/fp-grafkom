@@ -49,6 +49,46 @@ scene.traverse((o) => {
   if (o.isMesh && o.userData.solid) colliders.push(new THREE.Box3().setFromObject(o));
 });
 
+// Pintu: AABB dihitung pada posisi tertutup, lalu dimasukkan ke daftar
+// tabrakan hanya saat pintu tertutup (pintu terbuka bisa dilewati).
+const doorBoxes = new Map();
+for (const d of house.doors) {
+  const saved = d.children.map((h) => h.rotation.y);
+  for (const h of d.children) h.rotation.y = 0;
+  d.updateMatrixWorld(true);
+  doorBoxes.set(d, new THREE.Box3().setFromObject(d));
+  d.children.forEach((h, i) => (h.rotation.y = saved[i]));
+  d.updateMatrixWorld(true);
+}
+function syncDoorColliders() {
+  for (const [d, box] of doorBoxes) {
+    const i = colliders.indexOf(box);
+    if (d.userData.open && i >= 0) colliders.splice(i, 1);
+    else if (!d.userData.open && i < 0) colliders.push(box);
+  }
+}
+syncDoorColliders();
+
+// Raycast dari tengah layar (crosshair) untuk mencari pintu yang dibidik.
+// Seluruh rumah ikut diuji agar pintu di balik dinding tidak ikut terpilih.
+const REACH = 3; // jarak maksimum interaksi (m)
+const raycaster = new THREE.Raycaster();
+raycaster.far = REACH;
+const SCREEN_CENTER = new THREE.Vector2(0, 0);
+// Kotak ambang pintu (posisi tertutup) juga bisa dibidik, sehingga pintu yang
+// sedang terbuka tetap bisa ditutup dengan membidik lubang pintunya.
+const hitPoint = new THREE.Vector3();
+function aimedDoor() {
+  raycaster.setFromCamera(SCREEN_CENTER, camera);
+  const hit = raycaster.intersectObject(house.group, true).find((h) => h.object.isMesh);
+  if (hit?.object.userData.door) return hit.object.userData.door;
+  const limit = Math.min(REACH, hit ? hit.distance + 0.2 : REACH);
+  for (const [d, box] of doorBoxes) {
+    if (raycaster.ray.intersectBox(box, hitPoint) && hitPoint.distanceTo(raycaster.ray.origin) <= limit) return d;
+  }
+  return null;
+}
+
 const TIME = {
   day: { sky: 0xa9d4f0, hemiSky: 0xdfefff, hemi: 1.6, sun: 2.6, sunColor: 0xfff1d6, lamp: 1.5 },
   night: { sky: 0x0d1530, hemiSky: 0x5a6a9a, hemi: 0.35, sun: 0.3, sunColor: 0x9fb4ff, lamp: 14 },
@@ -69,7 +109,7 @@ applyTime();
 
 const HELP = {
   orbit: "Drag kiri: putar · Drag kanan: geser · Scroll: zoom · WASD: geser.<br>Saat sudah dekat/di dalam: drag = menoleh, scroll = maju/mundur.",
-  walk: "Klik layar lalu WASD: jalan · Shift: lari · Mouse: menoleh · Esc: lepas mouse.",
+  walk: "Klik layar lalu WASD: jalan · Shift: lari · Spasi: lompat · Ctrl: jongkok · Mouse: menoleh · Esc: lepas mouse.<br>Arahkan crosshair ke pintu lalu tekan E untuk membuka/menutup.",
   tour: "Tur otomatis berjalan. Klik tombol tur atau pilih preset untuk berhenti.",
 };
 
@@ -128,13 +168,38 @@ function updateHud() {
   $("tour").textContent = rig.tour ? "Hentikan tur" : "Tur otomatis";
   $("tour").classList.toggle("active", !!rig.tour);
   $("help").innerHTML = rig.tour ? HELP.tour : HELP[rig.mode];
-  $("crosshair").style.display = walking && rig.locked ? "block" : "none";
+  $("crosshair").style.display = walking ? "block" : "none";
+  if (!walking || !rig.locked) setAim(null);
   $("lock-hint").style.display = walking && !rig.locked ? "block" : "none";
 }
 
 const toggleMode = () => rig.setMode(rig.mode === "orbit" ? "walk" : "orbit");
 const toggleTour = () => (rig.tour ? rig.stopTour() : rig.startTour());
-const toggleDoor = () => ($("door").textContent = house.toggleDoors() ? "Tutup pintu" : "Buka pintu");
+function doorsChanged() {
+  syncDoorColliders();
+  $("door").textContent = house.doors.some((d) => d.userData.open) ? "Tutup pintu" : "Buka pintu";
+  aim = undefined; // paksa teks petunjuk diperbarui
+}
+const toggleDoor = () => {
+  house.toggleDoors();
+  doorsChanged();
+};
+function interact() {
+  const d = aimedDoor();
+  if (!d) return;
+  house.toggleDoor(d);
+  doorsChanged();
+}
+
+// Crosshair menyala dan petunjuk "E" muncul saat membidik pintu.
+let aim;
+function setAim(door) {
+  if (door === aim) return;
+  aim = door;
+  $("crosshair").classList.toggle("target", !!door);
+  $("interact-hint").textContent = door ? `E: ${door.userData.open ? "tutup" : "buka"} pintu` : "";
+  $("interact-hint").style.display = door ? "block" : "none";
+}
 const toggleNight = () => {
   night = !night;
   applyTime();
@@ -171,7 +236,9 @@ for (const b of document.querySelectorAll("#hud button")) b.addEventListener("cl
 
 addEventListener("keydown", (e) => {
   if (activeComponent || e.target.closest?.("input, select, textarea, [contenteditable]")) return;
-  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.repeat) return;
+  if (e.code === "KeyE") return interact(); // tetap bisa sambil jongkok (Ctrl)
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
   const n = Number(e.key);
   if (n >= 1 && n <= PRESETS.length) rig.goTo(PRESETS[n - 1].key);
   else if (e.code === "KeyF") toggleMode();
@@ -194,6 +261,7 @@ renderer.setAnimationLoop((now) => {
   }
   rig.update(dt);
   house.update(dt);
+  if (rig.mode === "walk" && rig.locked) setAim(aimedDoor());
   renderer.render(scene, camera);
   if (screenshotRequested) {
     screenshotRequested = false;

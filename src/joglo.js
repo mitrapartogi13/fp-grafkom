@@ -172,6 +172,11 @@ export function createDoor(width = ENTRY_WIDTH, h = ENTRY_HEIGHT, open = false) 
     for (const y of [0.3, 0.7]) box(hinge, w - 0.3, h * 0.28, 0.09, MAT.woodDark, cx, h * y, 0, { cast: false });
     box(hinge, 0.05, 0.12, 0.12, MAT.brass, -s * (w - 0.12), h * 0.5, 0, { cast: false });
   }
+  // Setiap mesh menunjuk ke pintunya agar bisa dipilih lewat raycast (tombol E).
+  g.userData.open = open;
+  g.traverse((o) => {
+    if (o.isMesh) o.userData.door = g;
+  });
   return g;
 }
 
@@ -353,19 +358,29 @@ export function buildJoglo() {
     if (object.isPointLight) lights.push(object);
   });
 
-  let open = true;
+  const doors = [door];
   return {
     group,
     lights,
+    doors,
+    // Buka/tutup satu pintu; mengembalikan status barunya (true = terbuka).
+    toggleDoor(d) {
+      d.userData.open = !d.userData.open;
+      return d.userData.open;
+    },
+    // Tombol P / HUD: bila ada yang terbuka, tutup semua; selain itu buka semua.
     toggleDoors() {
-      open = !open;
+      const open = !doors.some((d) => d.userData.open);
+      for (const d of doors) d.userData.open = open;
       return open;
     },
     update(dt) {
       const k = Math.min(1, dt * 3);
-      for (const hinge of door.children) {
-        const target = open ? hinge.userData.openAngle : 0;
-        hinge.rotation.y += (target - hinge.rotation.y) * k;
+      for (const d of doors) {
+        for (const hinge of d.children) {
+          const target = d.userData.open ? hinge.userData.openAngle : 0;
+          hinge.rotation.y += (target - hinge.rotation.y) * k;
+        }
       }
     },
   };

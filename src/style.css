@@ -268,13 +268,55 @@ canvas {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
   display: none;
   pointer-events: none;
+  z-index: 5;
+}
+
+/* Tanda "+" dari dua garis, dengan bayangan agar terlihat di latar terang. */
+#crosshair::before,
+#crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+#crosshair::before {
+  left: 10px;
+  top: 0;
+  width: 2px;
+  height: 22px;
+}
+
+#crosshair::after {
+  top: 10px;
+  left: 0;
+  width: 22px;
+  height: 2px;
+}
+
+#crosshair.target::before,
+#crosshair.target::after {
+  background: #ffcf6b;
+}
+
+#interact-hint {
+  position: absolute;
+  top: calc(50% + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 5px;
+  font-size: 13px;
+  display: none;
+  pointer-events: none;
+  z-index: 5;
 }
 
 #lock-hint {

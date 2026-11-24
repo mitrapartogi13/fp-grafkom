@@ -24,11 +24,11 @@ sudut tertentu, dan `&night` untuk mode malam.
 | Aksi | Mode Orbit | Mode Jalan |
 |---|---|---|
 | Melihat | drag kiri (putar; bila dekat = menoleh) | gerakkan mouse |
-| Bergerak | WASD / drag kanan (geser) | WASD, Shift = lari |
+| Bergerak | WASD / drag kanan (geser) | WASD, Shift = lari, Spasi = lompat, Ctrl = jongkok |
 | Maju/mundur | scroll (zoom; bila dekat = maju/mundur) | - |
 
 Tombol keyboard: `1`-`7` preset kamera, `F` ganti mode, `T` tur otomatis,
-`P` buka/tutup pintu, `N` siang/malam, `H` sembunyikan HUD,
+`P` buka/tutup semua pintu, `E` buka/tutup pintu yang dibidik crosshair, `N` siang/malam, `H` sembunyikan HUD,
 `G` tampilkan FPS, `C` simpan screenshot (PNG). Pada mode jalan, klik layar untuk
 mengunci mouse dan tekan Esc untuk melepasnya.
 
