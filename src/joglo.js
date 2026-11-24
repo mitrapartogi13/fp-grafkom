@@ -16,6 +16,7 @@ const GURU_HEIGHT = 4.3;
 const EAVE_HEIGHT = 2.7;
 const ENTRY_WIDTH = 2.2;
 const ENTRY_HEIGHT = 2.5;
+const SENTHONG_DEPTH = 2.6;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const lerp = THREE.MathUtils.lerp;
 
@@ -216,6 +217,48 @@ export function createDalemWall() {
   });
 }
 
+export function createDalemBackWall(height = outerPillarHeight(DALEM_FRAME)) {
+  return createWall({ L: 2 * DALEM_FRAME.hx, H: height, mat: MAT.wall });
+}
+
+export function createDalemSideWall(height = outerPillarHeight(DALEM_FRAME)) {
+  return createWall({
+    L: 2 * DALEM_FRAME.hz, H: height, mat: MAT.wall,
+    openings: [{ x0: -0.7, x1: 0.7, y0: 1.0, y1: 2.1, bars: 4 }],
+  });
+}
+
+export function createSenthongPartition() {
+  const group = new THREE.Group();
+  const wall = { H: 2.9, T: 0.12, mat: MAT.gebyok };
+  group.add(createWall({
+    ...wall, L: 2 * DALEM_FRAME.hx, panels: true,
+    openings: [
+      { x0: -4.85, x1: -3.85, y0: 0, y1: 2.2 },
+      { x0: -0.75, x1: 0.75, y0: 0, y1: 2.3 },
+      { x0: 3.85, x1: 4.85, y0: 0, y1: 2.2 },
+    ],
+  }));
+  for (const s of [-1, 1]) {
+    place(group, createWall({ ...wall, L: SENTHONG_DEPTH }), s * 2.2, 0, -SENTHONG_DEPTH / 2, Math.PI / 2);
+  }
+  return group;
+}
+
+export function createSenthongCurtains() {
+  const group = new THREE.Group();
+  for (const s of [-1, 1]) {
+    box(group, 0.4, 2.3, 0.04, MAT.cloth, s * 0.6, 1.15, 0, { cast: false });
+  }
+  return group;
+}
+
+export function createRoofGutter() {
+  const group = new THREE.Group();
+  box(group, 14.4, 0.06, 1.0, MAT.roofDark);
+  return group;
+}
+
 export function createLamp(len = 1.2) {
   const g = new THREE.Group();
   cyl(g, 0.015, 0.015, len, MAT.black, 0, -len / 2, 0, 4, { cast: false });
@@ -279,13 +322,9 @@ export function buildJoglo() {
   const frontWall = place(dalem, createDalemWall(), 0, F, hz);
   const door = createDoor(ENTRY_WIDTH, ENTRY_HEIGHT, true);
   frontWall.add(door);
-  place(dalem, createWall({ L: 2 * hx, H, mat: MAT.wall }), 0, F, -hz);
+  place(dalem, createDalemBackWall(H), 0, F, -hz);
   for (const s of [-1, 1]) {
-    const sideWall = createWall({
-      L: 2 * hz, H, mat: MAT.wall,
-      openings: [{ x0: -0.7, x1: 0.7, y0: 1.0, y1: 2.1, bars: 4 }],
-    });
-    place(dalem, sideWall, s * hx, F, 0, Math.PI / 2);
+    place(dalem, createDalemSideWall(H), s * hx, F, 0, Math.PI / 2);
   }
 
   place(dalem, createDiningSet(), 0, F, 0.6);
@@ -293,21 +332,9 @@ export function buildJoglo() {
   place(dalem, createBench(), 5.85, F, 1.2, Math.PI / 2);
   place(dalem, createLamp(), 0, di.guruTop + 0.85);
 
-  const sz = -hz + 2.6;
-  const senthongWall = createWall({
-    L: 2 * hx, H: 2.9, T: 0.12, mat: MAT.gebyok, panels: true,
-    openings: [
-      { x0: -4.85, x1: -3.85, y0: 0, y1: 2.2 },
-      { x0: -0.75, x1: 0.75, y0: 0, y1: 2.3 },
-      { x0: 3.85, x1: 4.85, y0: 0, y1: 2.2 },
-    ],
-  });
-  place(dalem, senthongWall, 0, F, sz);
-  for (const s of [-1, 1]) {
-    const partition = createWall({ L: 2.6, H: 2.9, T: 0.12, mat: MAT.gebyok });
-    place(dalem, partition, s * 2.2, F, (-hz + sz) / 2, Math.PI / 2);
-  }
-  for (const s of [-1, 1]) box(dalem, 0.4, 2.3, 0.04, MAT.cloth, s * 0.6, F + 1.15, sz + 0.1, { cast: false }); // tirai
+  const sz = -hz + SENTHONG_DEPTH;
+  place(dalem, createSenthongPartition(), 0, F, sz);
+  place(dalem, createSenthongCurtains(), 0, F, sz + 0.1);
   box(dalem, 2 * hx, 0.12, 0.12, MAT.woodDark, 0, F + 2.96, -3.7);
   place(dalem, createBed(1.8, 1.3, true), 0, F, -4.15); // senthong tengah (krobongan)
   place(dalem, createBed(), -4.35, F, -4.2); // senthong kiwa
@@ -317,7 +344,7 @@ export function buildJoglo() {
   place(dalem, createStatue(MAT.mat), 0.95, F, sz + 0.5);
   place(dalem, createLamp(0.35), 0, F + 2.9, -3.7);
 
-  box(group, 14.4, 0.06, 1.0, MAT.roofDark, 0, F + 2.62, 0.75); // talang penghubung atap
+  place(group, createRoofGutter(), 0, F + 2.62, 0.75);
   place(group, createKelir(), -6.0, F, 0.25, Math.PI / 2);
   place(group, createLamp(0.3), -3.0, F + 2.59, 0.75);
 

@@ -5,7 +5,7 @@ import { rng } from "./lib.js";
 import { buildJoglo } from "./joglo.js";
 import { buildEnvironment } from "./environment.js";
 import { CameraRig, PRESETS } from "./camera.js";
-import { COMPONENTS } from "./component-catalog.js";
+import { COMPONENT_GROUPS, COMPONENTS } from "./component-catalog.js";
 import { ComponentPreview } from "./component-preview.js";
 
 const $ = (id) => document.getElementById(id);
@@ -76,8 +76,13 @@ const HELP = {
 const rig = new CameraRig(camera, houseViewport, colliders, updateHud);
 
 const components = new Map(COMPONENTS.map((component) => [component.id, component]));
-for (const { id, label } of COMPONENTS) $("component-options").append(new Option(label, id));
 const viewSelect = $("view-select");
+for (const { label, items } of COMPONENT_GROUPS) {
+  const options = document.createElement("optgroup");
+  options.label = label;
+  options.append(...items.map(({ id, label }) => new Option(label, id)));
+  viewSelect.append(options);
+}
 let activeComponent = null;
 
 function resizeViewport() {
