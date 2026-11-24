@@ -3,6 +3,9 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 
 const EYE = 1.6; // tinggi mata
+const CROUCH_EYE = 1.0; // tinggi mata saat jongkok (Ctrl)
+const GRAVITY = 24; // m/s^2, lebih kuat dari nyata agar lompatan terasa responsif
+const JUMP_SPEED = 7; // kecepatan awal lompat (Spasi) -> tinggi lompatan ~1 m
 const RADIUS = 0.28; // radius badan untuk tabrakan
 const STEP = 0.45; // tinggi maksimum yang bisa dinaiki
 const NEAR = 1.6;
@@ -51,6 +54,8 @@ export class CameraRig {
     this.tween = null;
     this.tour = null;
     this.feetY = 0;
+    this.vy = 0; // kecepatan vertikal (lompat/jatuh)
+    this.eye = EYE; // tinggi mata saat ini (berubah halus saat jongkok)
     this.keys = {};
 
     this.orbit = new OrbitControls(camera, dom);
@@ -68,6 +73,9 @@ export class CameraRig {
     dom.addEventListener("wheel", (e) => this.onWheel(e), { passive: false });
     addEventListener("keydown", (e) => {
       if (!e.target.closest?.("input, select, textarea, [contenteditable]")) this.keys[e.code] = true;
+      // Cegah aksi bawaan browser (scroll, Ctrl+S, Ctrl+D, ...) saat berjalan.
+      // Catatan: Ctrl+W/T/N tetap ditangani browser dan tidak bisa dicegah.
+      if (this.mode === "walk" && this.walk.isLocked && (e.code === "Space" || e.ctrlKey)) e.preventDefault();
     });
     addEventListener("keyup", (e) => (this.keys[e.code] = false));
     addEventListener("blur", () => (this.keys = {}));
@@ -84,7 +92,7 @@ export class CameraRig {
 
   blocked(x, z, feet) {
     for (const b of this.colliders) {
-      if (b.max.y <= feet + STEP || b.min.y >= feet + EYE + 0.15) continue;
+      if (b.max.y <= feet + STEP || b.min.y >= feet + this.eye + 0.15) continue;
       if (x + RADIUS > b.min.x && x - RADIUS < b.max.x && z + RADIUS > b.min.z && z - RADIUS < b.max.z) return true;
     }
     return false;
@@ -101,6 +109,8 @@ export class CameraRig {
 
   placeWalker(pos, look) {
     this.feetY = this.groundAt(pos.x, pos.z, pos.y - EYE + 0.3);
+    this.vy = 0;
+    this.eye = EYE;
     this.camera.position.set(pos.x, this.feetY + EYE, pos.z);
     this.camera.lookAt(look);
   }
@@ -183,8 +193,10 @@ export class CameraRig {
     const k = this.keys;
     const f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
     const r = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
-    const run = k.ShiftLeft || k.ShiftRight;
-    return { f, r, run };
+    const crouch = !!(k.ControlLeft || k.ControlRight);
+    const run = (k.ShiftLeft || k.ShiftRight) && !crouch;
+    const jump = !!k.Space;
+    return { f, r, run, crouch, jump };
   }
 
   // Vektor gerak horizontal menurut arah pandang kamera.
@@ -218,15 +230,31 @@ export class CameraRig {
   updateWalk(dt) {
     if (!this.walk.isLocked) return;
     const p = this.camera.position;
-    const mv = this.moveVector(3, dt);
+    const { crouch, jump } = this.input();
+    this.eye += ((crouch ? CROUCH_EYE : EYE) - this.eye) * Math.min(1, dt * 12);
+    const mv = this.moveVector(crouch ? 1.3 : 3, dt);
     const stuck = this.blocked(p.x, p.z, this.feetY);
     if (stuck || !this.blocked(p.x + mv.x, p.z, this.feetY)) p.x += mv.x;
     if (stuck || !this.blocked(p.x, p.z + mv.z, this.feetY)) p.z += mv.z;
     p.x = THREE.MathUtils.clamp(p.x, -60, 60);
     p.z = THREE.MathUtils.clamp(p.z, -60, 80);
     const ground = this.groundAt(p.x, p.z, this.feetY);
-    this.feetY += (ground - this.feetY) * Math.min(1, dt * 14);
-    p.y = this.feetY + EYE;
+    const onGround = this.vy <= 0 && this.feetY <= ground + 0.02;
+    if (onGround && jump) this.vy = JUMP_SPEED;
+    if (this.vy > 0 || this.feetY > ground + 0.02) {
+      // Di udara: gerak parabola, v berkurang oleh gravitasi tiap frame.
+      this.vy -= GRAVITY * dt;
+      this.feetY += this.vy * dt;
+      if (this.feetY <= ground) {
+        this.feetY = ground;
+        this.vy = 0;
+      }
+    } else {
+      // Di tanah: naik anak tangga secara halus.
+      this.vy = 0;
+      this.feetY += (ground - this.feetY) * Math.min(1, dt * 14);
+    }
+    p.y = this.feetY + this.eye;
   }
 
   updateOrbit(dt) {
